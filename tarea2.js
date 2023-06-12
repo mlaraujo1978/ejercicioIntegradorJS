@@ -26,178 +26,239 @@ Ejercicios
 
 // Cada producto que vende el super es creado con esta clase
 class Producto {
-    constructor(sku, nombre, precio, categoria, stock) {
-      this.sku = sku;
-      this.nombre = nombre;
-      this.categoria = categoria;
-      this.precio = precio;
-      this.stock = stock === undefined ? 10 : stock;
-  }   
+  constructor(sku, nombre, precio, categoria, stock) {
+    this.sku = sku;
+    this.nombre = nombre;
+    this.categoria = categoria;
+    this.precio = precio;
+    this.stock = stock === undefined ? 10 : stock;
   }
-  
-  // Creo todos los productos que vende mi super
-  const queso = new Producto('KS944RUR', 'Queso', 10, 'lacteos', 4);
-  const gaseosa = new Producto('FN312PPE', 'Gaseosa', 5, 'bebidas');
-  const cerveza = new Producto('PV332MJ', 'Cerveza', 20, 'bebidas');
-  const arroz = new Producto('XX92LKI', 'Arroz', 7, 'alimentos', 20);
-  const fideos = new Producto('UI999TY', 'Fideos', 5, 'alimentos');
-  const lavandina = new Producto('RT324GD', 'Lavandina', 9, 'limpieza');
-  const shampoo = new Producto('OL883YE', 'Shampoo', 3, 'higiene', 50);
-  const jabon = new Producto('WE328NJ', 'Jabon', 4, 'higiene', 3);
-  
-  // Genero un listado de productos. Simulando base de datos
-  const productosDelSuper = [queso, gaseosa, cerveza, arroz, fideos, lavandina, shampoo, jabon];
-  
-  // Cada cliente que venga a mi super va a crear un carrito
-  class Carrito {
+}
+
+// Creo todos los productos que vende mi super
+const queso = new Producto("KS944RUR", "Queso", 10, "lacteos", 4);
+const gaseosa = new Producto("FN312PPE", "Gaseosa", 5, "bebidas");
+const cerveza = new Producto("PV332MJ", "Cerveza", 20, "bebidas");
+const arroz = new Producto("XX92LKI", "Arroz", 7, "alimentos", 20);
+const fideos = new Producto("UI999TY", "Fideos", 5, "alimentos");
+const lavandina = new Producto("RT324GD", "Lavandina", 9, "limpieza");
+const shampoo = new Producto("OL883YE", "Shampoo", 3, "higiene", 50);
+const jabon = new Producto("WE328NJ", "Jabon", 4, "higiene", 3);
+
+// Genero un listado de productos. Simulando base de datos
+const productosDelSuper = [
+  queso,
+  gaseosa,
+  cerveza,
+  arroz,
+  fideos,
+  lavandina,
+  shampoo,
+  jabon,
+];
+
+// Cada cliente que venga a mi super va a crear un carrito
+class Carrito {
   // Al crear un carrito, empieza vació
-    constructor() {
-      this.precioTotal = 0;
-      this.productos = [];
-      this.categorias = [];
-    }
+  constructor() {
+    this.precioTotal = 0;
+    this.productos = [];
+    this.categorias = [];
+  }
   /**
    * función que agrega @{cantidad} de productos con @{sku} al carrito
    */
-  
-    async agregarProducto(sku,cantidad) { 
-  
-    try{
-        const producto = await findProductBySku(sku);// Busco el producto en la "base de datos"
-        console.log(`\nAgregando ${cantidad}... ${sku}`);
-        const printControlStock = stockControl(sku,cantidad); 
-        const foundProduct = this.productos.find(product => product.sku === sku);
-        const foundCategory = this.categorias.find(category => category === producto.categoria);
-  
-        if(this.productos.length == 0 || !foundProduct){   
-  
-            if(producto.stock<cantidad){
-                cantidad=producto.stock;
-            }
-            const nuevoProducto = new ProductoEnCarrito(sku, producto.nombre, cantidad);         
-            this.productos.push(nuevoProducto);
-            this.precioTotal += (producto.precio*cantidad);            
-            
-            if(!foundCategory){
-                this.categorias.push(producto.categoria);
-            }
-                                        
-        }else{
-  
-            if(foundProduct){                
-                if(producto.stock < cantidad){
-                    cantidad=producto.stock;
-                }
-                foundProduct.cantidad += cantidad; 
-                this.precioTotal += (producto.precio*cantidad);                  
-            }            
+
+  async agregarProducto(sku, cantidad) {
+    try {
+      const producto = await findProductBySku(sku); // Busco el producto en la "base de datos"
+      console.log(`\nAgregando ${cantidad} unidades... del SKU:|${sku}|`);
+      const printControlStock = stockControl(sku, cantidad);
+      const foundProduct = this.productos.find(
+        (product) => product.sku === sku
+      );
+      const foundCategory = this.categorias.find(
+        (category) => category === producto.categoria
+      );
+
+      if (this.productos.length == 0 || !foundProduct) {
+        if (producto.stock < cantidad) {
+          cantidad = producto.stock;
         }
-        stockUpdate(sku,-cantidad);
-        printProductInCart(this.productos, this.categorias, this.precioTotal);        
-    }catch(error){
-        console.log(error);
-    }
-    }
-   
-    async removeProduct(sku,cantidad) {
+        const nuevoProducto = new ProductoEnCarrito(
+          sku,
+          producto.nombre,
+          cantidad
+        );
+        this.productos.push(nuevoProducto);
+        this.precioTotal += producto.precio * cantidad;
 
-        const productMarket =  await findProductBySku(sku);        
-        const productPromise = await findProductBySkuInCart(sku);// Busco el producto en el carrito
-        //console.log("Producto encontrado", productPromise);               
-      
-        productPromise  
-            .then((product)=>{  
-                console.log(`\nEliminando del carrito: ${cantidad} ${sku}`);    
-                      
-                if(product.cantidad<cantidad){
-                    const index = this.productos.findIndex(function(product){
-                    return product.sku === sku;})
-                    this.productos.splice(index,1);
-                    cantidad=product.cantidad;
-                    console.log("Se eliminó del carrito el producto: "+product.nombre+"|sku: "+sku);
-                }else{
-                    product.cantidad -= cantidad; 
-                    console.log("Se eliminaron del carrito "+cantidad+" unidades, de: "+product.nombre+"|sku: "+sku);
-                }
-                this.precioTotal-= (cantidad*productMarket.precio);
-                stockUpdate(sku,cantidad);  
-                printProductInCart(this.productos, this.categorias, this.precioTotal);
-            })
-            .catch(mensaje=> {
-              console.log(`\nEliminando del carrito: ${cantidad} ${sku}`);
-              console.log(mensaje+"|||| NO se puede eliminar el producto!. ||||");
-              //throw error; // Lanzar el nuevo error
-            })
-            .finally(() => {
-              console.log("Por favor verifique el número de SKU a eliminar...");
+        if (!foundCategory) {
+          this.categorias.push(producto.categoria);
+        }
+      } else {
+        if (foundProduct) {
+          if (producto.stock < cantidad) {
+            cantidad = producto.stock;
+          }
+          foundProduct.cantidad += cantidad;
+          this.precioTotal += producto.precio * cantidad;
+        }
+      }
+      stockUpdate(sku, -cantidad);
+      printProductInCart(this.productos, this.categorias, this.precioTotal);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async eliminarProducto(sku, cantidad) {
+    const foundProduct = await findProductBySkuInCart(sku);
+    const foundProductMarket = await findProductBySku(sku);
+    
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (foundProduct) {
+          console.log(
+            `\nEliminando del carrito... ${cantidad} unidades, del SKU: ${sku}`
+          );
+
+          if (foundProduct.cantidad < cantidad) {
+            cantidad = foundProduct.cantidad;
+            console.log(`<<<<  | Hay solo "${cantidad}" unidad/es de ${foundProduct.nombre}|SKU:${sku}.| Se eliminan "${cantidad}" unidad/es... >>>>`);
+            const index = this.productos.findIndex(function (foundProduct) {
+              return foundProduct.sku === sku;
             });
-    }
-}
-  
-  // Cada producto que se agrega al carrito es creado con esta clase
-  class ProductoEnCarrito {
-  constructor(sku, nombre, cantidad) {
-      this.sku = sku;
-      this.nombre = nombre;
-      this.cantidad = cantidad;
-  }
-  
-  }
-  
-  // Función que busca un producto por su sku en "la base de datos"
-  function findProductBySku(sku) {
-  return new Promise((resolve, reject) => {
-      setTimeout(() => {
-          const foundProduct = productosDelSuper.find(product => product.sku === sku);
-          if (foundProduct) {
-              resolve(foundProduct);
+            this.productos.splice(index, 1);
+            this.categorias = categoriesUpdate(this.productos);
           } else {
-              reject(`\nProduct ${sku} not found`);
+            foundProduct.cantidad -= cantidad;
           }
-      }, 1000);
-  });
-  }
-  
-  function findProductBySkuInCart(sku) {
-  return new Promise((resolve, reject) => {
-      setTimeout(() => {
-          const foundProduct = carrito.productos.find(product => product.sku === sku);
-          if (foundProduct) {
-              resolve(foundProduct);
-          } else {
-              reject(`\nProduct ${sku} not found in cart`);
-          }
-      }, 1000);
-  });
-  } 
-  
-  function stockControl(sku,cantidad) {   
-    const foundProduct = productosDelSuper.find(product => product.sku === sku);
-    if (foundProduct.stock >= cantidad) {
-        console.log("\nEl stock disponible del producto "+foundProduct.nombre+"|sku: "+foundProduct.sku+", es de "+foundProduct.stock+" unidades.");
-    } else {
-        console.log("\nNo hay suficiente stock disponible del producto "+foundProduct.nombre+"|sku: "+foundProduct.sku+" el mismo tiene "+foundProduct.stock+" unidades.");
-    }
-  }
-  
-  function stockUpdate(sku,cantidad) {   
-    const foundProduct = productosDelSuper.find(product => product.sku === sku);
-    foundProduct.stock+=cantidad;
-    console.log("\n|| El stock actualizado del producto "+foundProduct.nombre+" es de "+foundProduct.stock+" unidades.||");
-  }
-  
-  function printProductInCart(products, categories, totalPrice){
-  console.log("\n|||| CARRITO DE COMPRAS  |||| ");
-  console.log(products);
-  console.log("|| Precio Total a pagar: $ "+totalPrice)+" ||";
-  console.log("|| Categoria/s de los productos: "+categories)+" ||\n";
-  }
-  
-  const carrito = new Carrito();
-  carrito.agregarProducto('WE328NJ',1);
-  carrito.agregarProducto('WE328NJ',3);
-  carrito.agregarProducto('PV332MJ',5)
-  carrito.removeProduct('WE3w28NJ',2);
- 
+          this.precioTotal -= cantidad * foundProductMarket.precio;
+          stockUpdate(sku, cantidad);
+          printProductInCart(this.productos, this.categorias, this.precioTotal);
 
-  
+          resolve(
+            `\n <<<<  | Carrito actualizado. Se eliminaron ${cantidad} unidad/es de ${foundProduct.nombre} |SKU:${sku}| >>>>`
+          );
+        } else {
+          reject(
+            error            
+          );
+        }
+      }, 1000);
+    });
+  }
+}
+
+// Cada producto que se agrega al carrito es creado con esta clase
+class ProductoEnCarrito {
+  constructor(sku, nombre, cantidad) {
+    this.sku = sku;
+    this.nombre = nombre;
+    this.cantidad = cantidad;
+  }
+}
+
+// Función que busca un producto por su sku en "la base de datos"
+function findProductBySku(sku) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const foundProduct = productosDelSuper.find(
+        (product) => product.sku === sku
+      );
+      if (foundProduct) {
+        resolve(foundProduct);
+      } else {
+        reject(`\n[[[ ERROR: || Product ${sku} not found. || ]]]`);
+      }
+    }, 1000);
+  });
+}
+
+function findProductBySkuInCart(sku) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const foundProduct = carrito.productos.find(
+        (product) => product.sku === sku
+      );
+      if (foundProduct) {
+        resolve(foundProduct);
+      } else {
+        reject(
+          `\n[[[ ERROR: || Producto SKU: ${sku} no encontrado en el carrito. || ]]]`
+        );
+      }
+    }, 1000);
+  });
+}
+
+function stockControl(sku, cantidad) {
+  const foundProduct = productosDelSuper.find((product) => product.sku === sku);
+  if (foundProduct.stock >= cantidad) {
+    console.log(
+      "\n<< El stock disponible del producto " +
+        foundProduct.nombre +
+        "|sku: " +
+        foundProduct.sku +
+        ", es de " +
+        foundProduct.stock +
+        " unidades. >>"
+    );
+  } else {
+    console.log(
+      "\n<< No hay suficiente stock disponible de " +
+        foundProduct.nombre +
+        "|sku: " +
+        foundProduct.sku +
+        ", como máximo se agregaran " +
+        foundProduct.stock +
+        " unidad/es. >>"
+    );
+  }
+}
+
+function stockUpdate(sku, cantidad) {
+  const foundProduct = productosDelSuper.find((product) => product.sku === sku);
+  foundProduct.stock += cantidad;
+  console.log(
+    "\n*** Se actualiza el stock del producto " +
+      foundProduct.nombre +
+      " ahora hay disponible: " +
+      foundProduct.stock +
+      " unidad/es. ***"
+  );
+}
+
+function categoriesUpdate(productsInCart) {
+  const categoriesSet = new Set(); // el Set evita duplicados en la colección
+
+  productsInCart.forEach(({ sku }) => {
+    const foundProduct = productosDelSuper.find(
+      (product) => product.sku === sku
+    );
+    categoriesSet.add(foundProduct.categoria);
+  });
+  return Array.from(categoriesSet);
+}
+
+function printProductInCart(products, categories, totalPrice) {
+  console.log("\n|| CARRITO DE COMPRAS: ");
+  console.log(products);
+  console.log("|| Precio Total a Pagar: $ " + totalPrice)+" ||";
+  console.log("|| Categoria/s de los productos: " + categories)+" ||\n";
+}
+
+const carrito = new Carrito();
+carrito.agregarProducto("WE328NJ", 1);
+carrito.agregarProducto("WE328NJ", 3);
+carrito.agregarProducto("OL883YE", 7);
+carrito
+  .eliminarProducto("WE328NJ", 4)
+  .then((resultado) => console.log(resultado))
+  .catch((error) => console.log(error));
+carrito
+  .eliminarProducto("WE3w28NJ", 2)
+  .then((resultado) => console.log(resultado))
+  .catch((error) => console.log(error));
+carrito.agregarProducto("PV332MJ", 5);
