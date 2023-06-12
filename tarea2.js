@@ -175,7 +175,7 @@ function findProductBySku(sku) {
     }, 1000);
   });
 }
-
+// Función que busca un producto por su sku en "en el carrito"
 function findProductBySkuInCart(sku) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -192,7 +192,7 @@ function findProductBySkuInCart(sku) {
     }, 1000);
   });
 }
-
+// Función que controla el stock disponible vs. la cantidad solicitada del producto
 function stockControl(sku, cantidad) {
   const foundProduct = productosDelSuper.find((product) => product.sku === sku);
   if (foundProduct.stock >= cantidad) {
@@ -217,7 +217,7 @@ function stockControl(sku, cantidad) {
     );
   }
 }
-
+// Función que actualiza el stock del super
 function stockUpdate(sku, cantidad) {
   const foundProduct = productosDelSuper.find((product) => product.sku === sku);
   foundProduct.stock += cantidad;
@@ -229,9 +229,9 @@ function stockUpdate(sku, cantidad) {
       " unidad/es. ***"
   );
 }
-
+// Función que actualiza las categorias del carrito cuando se elimina un producto
 function categoriesUpdate(productsInCart) {
-  const categoriesSet = new Set(); // el Set evita duplicados en la colección
+  const categoriesSet = new Set(); // Con el set evito duplicados 
 
   productsInCart.forEach(({ sku }) => {
     const foundProduct = productosDelSuper.find(
@@ -241,7 +241,7 @@ function categoriesUpdate(productsInCart) {
   });
   return Array.from(categoriesSet);
 }
-
+// Función que imprime el carrito de compras
 function printProductInCart(products, categories, totalPrice) {
   console.log("\n|| CARRITO DE COMPRAS: ");
   console.log(products);
