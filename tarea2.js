@@ -65,10 +65,8 @@ class Carrito {
     this.productos = [];
     this.categorias = [];
   }
-  /**
-   * función que agrega @{cantidad} de productos con @{sku} al carrito
-   */
-// Función que agrega un producto al carrito de compras
+
+//función que agrega @{cantidad} de productos con @{sku} al carrito
   async agregarProducto(sku, cantidad) {
     try {
       const producto = await findProductBySku(sku); // Busco el producto en la "base de datos"
@@ -111,7 +109,7 @@ class Carrito {
       console.log(error);
     }
   }
-// Función que elimina un producto al carrito de compras
+// función que elimina @{cantidad} de productos con @{sku} al carrito
   async eliminarProducto(sku, cantidad) {
     const foundProduct = await findProductBySkuInCart(sku);
     const foundProductMarket = await findProductBySku(sku);
